@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <title>Kendo UI Snippet</title>
+
+  <link rel="stylesheet" href="http://kendo.cdn.telerik.com/2017.1.118/styles/kendo.common.min.css" />
+  <link rel="stylesheet" href="http://kendo.cdn.telerik.com/2017.1.118/styles/kendo.rtl.min.css" />
+  <link rel="stylesheet" href="http://kendo.cdn.telerik.com/2017.1.118/styles/kendo.silver.min.css" />
+  <link rel="stylesheet" href="http://kendo.cdn.telerik.com/2017.1.118/styles/kendo.mobile.all.min.css" />
+
+  <script src="http://code.jquery.com/jquery-1.12.4.min.js"></script>
+  <script src="http://kendo.cdn.telerik.com/2017.1.118/js/kendo.all.min.js"></script>
+</head>
+
+<body>
+
+  <div id="grid"></div>
+  <script>
+    $("#grid").kendoGrid({
+      // the column fields should match the excel columns
+
+      columns: [{
+        field: "Name"
+      }, {
+        field: "Age"
+      }],
+      dataSource: [{
+        Name: "John Doe",
+        Age: 33
+      }, {
+        Name: "John Doe1",
+        Age: 22
+      }, {
+        Name: "",
+        Age: ""
+      }],
+      dataBound: onDataBound
+    });
+
+    function onDataBound(e) {
+      var grid = $("#grid").data("kendoGrid");
+
+      $(grid.tbody).on("mousedown", "td", function(e) {
+        if (event.button == 2) {
+          // $(this).addClass("k-state-selected");
+          var row = $(this).closest("tr");
+          var rowIdx = $("tr", grid.tbody).index(row);
+          var colIdx = $("td", row).index(this);
+          var colName = $('#grid').find('th').eq(colIdx).text()
+          var offset = $("#grid").offset();
+          var textarea = $("<textarea>");
+
+          textarea.css({
+              position: 'absolute',
+              opacity: 0,
+              top: offset.top,
+              left: offset.left,
+              border: 'none',
+              width: $("#grid").width(),
+              height: $("#grid").height()
+            })
+            .appendTo('body')
+            .on('paste', function() {
+              // handle the paste event
+              setTimeout(function() {
+                // the the pasted content
+                var value = $.trim(textarea.val());
+                // get instance to the grid
+                var grid = $("#grid").data("kendoGrid");
+                // get the pasted rows - split the text by new line
+                var rows = value.split('\n');
+
+                var data = [];
+                var data1 = [];
+                data1 = grid.dataSource.data();
+                var dummyData1 = Object.assign({}, data1);
+                var len = data1.length - 1;
+                data1.pop();
+                //You are in last row
+                if (len == rowIdx) {
+                  console.log('Entered if loop');
+                  for (var i = 0; i < rows.length; i++) {
+                    var cells = rows[i].split('\t');
+                    if (cells.length != 1) {
+                      alert("You are allowed to copy only one column at a time");
+                      return;
+                    }
+                    var obj = Object.assign({}, dummyData1[len]);
+                    for (var propName in obj) {
+                      if (propName == colName) {
+                        obj[propName] = rows[i]
+                        data1.push(obj);
+                        debugger;
+
+                      }
+                    }
+
+                  }
+                } else {
+                  for (var i = 0; i < rows.length; i++) {
+                    var cells = rows[i].split('\t');
+                    if (cells.length != 1) {
+                      alert("You are allowed to copy only one column at a time");
+                      return;
+                    }
+                    console.log('Entered else loop' + dummyData1.length);
+                    if (rowIdx + i >= dummyData1.length) {
+                      var obj = {
+                        Name: "",
+                        Age: ""
+                      };
+                    } else {
+                      var obj = Object.assign({}, dummyData1[rowIdx + i]);
+                    }
+                    debugger
+                    console.log("obj - " + obj["Name"] + " - " + data1.length);
+                    for (var propName in obj) {
+                      if (propName == colName) {
+                        obj[propName] = rows[i]
+                        console.log(rowIdx + i + ' , ' + data1.length);
+                        if (data1.length > rowIdx + i) {
+                          console.log(' if loop');
+                          data1[rowIdx + i] = obj;
+                        } else {
+                          console.log(' else loop');
+                          data1.push(obj);
+                        }
+                        debugger;
+
+                      }
+                    }
+                  }
+                }
+
+                var obj = {
+                  Name: "",
+                  Age: ""
+                };
+                data1.push(obj);
+
+                var test = [];
+                for (var i = 0; i < data.length; i++) {
+                  // data1.push(data[i]);
+                  //  data1[rowIdx+i] = data[i];
+                }
+                grid.dataSource.data(data1);
+                textarea.val("");
+
+              });
+            }).on('focusout', function() {
+              // remove the textarea when it loses focus
+              $(this).remove();
+
+            });
+          // focus the textarea
+          setTimeout(function() {
+            textarea.focus();
+          });
+        }
+      })
+    }
+  </script>
+</body>
+
+</html>
